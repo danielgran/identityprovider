@@ -1,0 +1,69 @@
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Query {
+    authorize(token: String!): AuthenticationResult
+}
+
+type Mutation {
+    register(email: String!): RegisterResult
+    editUser(email: String!): User
+}
+
+type AuthenticationResult {
+    success: Boolean!
+    token: String
+    error: String
+}
+
+type RegisterResult{
+    success: Boolean!
+}
+
+type User {
+    id: Int
+    email: String!
+    name_first: String
+    name_last: String
+    gender: String
+    password: String
+    password_lastupdate: String
+    picture: String
+    phone_private: String
+    phone_private_verified: Boolean
+    phone_work: String
+    phone_work_verified: Boolean
+    diasabled: Boolean
+    created: String
+    last_login: String
+    last_update: String
+    birthdate: String
+
+    roles: [Role]
+    permissions: [Permission]
+}
+
+type Role {
+    id: Int!
+    name: String!
+    permissions: [Permission]
+}
+
+type Permission {
+    id: Int!
+    name: String!
+}
+
+type IdentityProvider {
+    id: Int!
+    name: String!
+    client_id: String!
+}
+
+type Application {
+    id: Int!
+    name: String!
+    client_id: String!
+}

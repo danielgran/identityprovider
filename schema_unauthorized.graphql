@@ -1,0 +1,16 @@
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Query {
+    authorize(token: String!): AuthorizationResult
+}
+type Mutation {
+    unaut(a: String!): AuthorizationResult
+}
+
+type AuthorizationResult {
+    token: String
+    success: Boolean!
+}
