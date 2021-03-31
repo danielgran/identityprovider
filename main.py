@@ -62,6 +62,22 @@ def api_endpoint():
     return jsonify(result), status_code
 
 
+@app.route("/authorize", methods=["GET"])
+def api_authorize():
+
+    request_obj = request
+    request_headers = transform_header_to_tuple(request_obj.headers)
+    # TODO check headers
+    # store the request and embed the login screen to the get request from the client so he can properly login
+
+    import api.openidconnect.authorization.AuthorizationHandler as oidcAuthorize
+    oidcAuthorize.handle_authentication_request(request)
+
+
+
+
+
+
 def transform_header_to_tuple(header):
     array = str(request.headers).replace("\r", "").replace(" ", "").split("\n")
 

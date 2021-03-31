@@ -21,6 +21,7 @@ class CacheUserSession():
         else:
             return False
 
+
     def __repr__(self):
         iam = {
             "id": self.id,
@@ -29,3 +30,19 @@ class CacheUserSession():
         }
 
         return json.dumps(iam)
+
+
+class CacheBlueprint:
+    import time
+
+    stored = False
+    created = int(time.time())
+
+    def store(self, uid):
+        assert (isinstance(self.to_json(), str))
+        assert (uid is not None)
+        redis_cache.set(uid, self.to_json(), ex=600)  # ex=600 delete cache object after 10 minutes
+        self.stored = True
+
+    def to_json(self):
+        pass
