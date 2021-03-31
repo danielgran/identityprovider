@@ -11,8 +11,9 @@ class CacheUserSession():
 
         # Session ID creation
 
-        sha256_hash = hashlib.sha512(str(random.randint(1354684644,998478465))).hexdigest()
-        self.id = base64.b64encode(sha256_hash)
+        sha256_hash = hashlib.sha256(str(random.randint(100, 2000)).encode('utf-8')).hexdigest()
+
+        self.id = sha256_hash
 
     def register(self):
         if redis_cache.set(self.id, self.__repr__()):
@@ -24,7 +25,7 @@ class CacheUserSession():
         iam = {
             "id": self.id,
             "address": self.address,
-            "authorization_level": self.authorizationlevel
+            "authorization_level": self.authorization_level
         }
 
         return json.dumps(iam)
