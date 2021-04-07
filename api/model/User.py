@@ -1,8 +1,9 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Table, Column, Integer, String, Date, TIMESTAMP, CHAR
-from api.base import base
+from api.base import db
 
-class User(base):
+
+class User(db.Model):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     email = Column(String(255))
@@ -13,8 +14,8 @@ class User(base):
     password_lastupdate = Column(TIMESTAMP)
     picture = Column(String(255))
     phone_private = Column(String(45))
-    phone_private_verified = Column(Integer(1))
-    disabled = Column(Integer(1))
+    phone_private_verified = Column(Integer)
+    disabled = Column(Integer)
     created = Column(TIMESTAMP)
     last_login = Column(TIMESTAMP)
     last_update = Column(TIMESTAMP)

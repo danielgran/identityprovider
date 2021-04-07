@@ -1,14 +1,12 @@
-from ariadne.constants import PLAYGROUND_HTML
-from ariadne import load_schema_from_path, make_executable_schema, graphql_sync, snake_case_fallback_resolvers, \
-    ObjectType
-
-from flask import Flask, request, jsonify
-
 import redis, json
 
-from api.base import db, redis_cache
-from api.authorization.level1.authorization import level1_authorization
+from ariadne.constants import PLAYGROUND_HTML
+from ariadne import load_schema_from_path, make_executable_schema, graphql_sync, snake_case_fallback_resolvers, ObjectType
+from flask import Flask, request, jsonify, Response
 
+from api.base import db
+import api.openidconnect.authentication.AuthenticationHandler as oidcAuthorize
+from api.openidconnect.authentication.ErrorResponse import ErrorResponse
 from api.registration.registration import register_user
 
 ENABLE_PLAYGROUND = True
@@ -26,8 +24,6 @@ redis_cache = redis.Redis(host="localhost", port=6379, db=0)
 redis_cache.flushdb(asynchronous=False)
 
 query = ObjectType("Query")
-query.set_field("authorize", level1_authorization)
-
 
 mutation = ObjectType("Mutation")
 mutation.set_field("register", register_user)
@@ -37,12 +33,14 @@ schema = make_executable_schema(
 )
 
 
+# GraphQL Playground
 if ENABLE_PLAYGROUND:
     @app.route("/graphql", methods=["GET"])
     def graphql_playground():
         return PLAYGROUND_HTML, 200
 
 
+# GraphQL Endpoint
 @app.route("/api", methods=["POST"])
 def api_endpoint():
 
@@ -62,20 +60,34 @@ def api_endpoint():
     return jsonify(result), status_code
 
 
+# Called when the user gets redirected to the IdP to sign in
 @app.route("/authorize", methods=["GET"])
-def api_authorize():
-
-    request_obj = request
-    request_headers = transform_header_to_tuple(request_obj.headers)
+def api_authorize_get():
     # TODO check headers
-    # store the request and embed the login screen to the get request from the client so he can properly login
+    # request_headers = transform_header_to_tuple(request.headers)
+    print(request)
 
-    import api.openidconnect.authorization.AuthorizationHandler as oidcAuthorize
-    oidcAuthorize.handle_authentication_request(request)
+    obj = oidcAuthorize.handle_authentication_request(request)
+
+    if isinstance(obj, ErrorResponse):
+        # Bad request
+        # TODO Content type is still text/html
+        return Response(response=str(obj), content_type="application/json", status=400)
+
+    resp = Response()
+    resp.headers["Location"] = obj.login_uri
+    return resp, 301
 
 
+# Called when the user has given credentials to authenticate
+@app.route("/authorize", methods=["POST"])
+def api_authorize_post():
+    print(request)
+    obj = oidcAuthorize.handle_user_authentication(request)
 
-
+    resp = Response()
+    resp.headers["Location"] = obj.redirect_uri
+    return resp, 301
 
 
 def transform_header_to_tuple(header):

@@ -1,6 +1,6 @@
-import hashlib, random, base64, json
+import hashlib, random, base64, json, uuid
 
-from api.base import redis_cache
+from api.base import redis_cache as redisbase
 
 
 class CacheUserSession():
@@ -16,7 +16,7 @@ class CacheUserSession():
         self.id = sha256_hash
 
     def register(self):
-        if redis_cache.set(self.id, self.__repr__()):
+        if redisbase.set(self.id, self.__repr__()):
             return True
         else:
             return False
@@ -36,13 +36,14 @@ class CacheBlueprint:
     import time
 
     stored = False
-    created = int(time.time())
+    time_created = int(time.time())
+    guid = str(uuid.uuid4())
 
-    def store(self, uid):
+    def store(self):
         assert (isinstance(self.to_json(), str))
-        assert (uid is not None)
-        redis_cache.set(uid, self.to_json(), ex=600)  # ex=600 delete cache object after 10 minutes
+        redisbase.set(self.guid, self.to_json(), ex=1200)  # ex=600 delete cache object after 10 minutes
         self.stored = True
 
     def to_json(self):
         pass
+
