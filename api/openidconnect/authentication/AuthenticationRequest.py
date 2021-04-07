@@ -26,8 +26,9 @@ class AuthenticationRequest(RedisCache.CacheBlueprint):
                  auto_store=False
                  ):
 
-        # Required
+        super(AuthenticationRequest, self).__init__()
 
+        # Required
         self.scope = scope
         self.response_type = response_type
         self.client_id = client_id

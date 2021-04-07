@@ -1,7 +1,8 @@
-import hashlib, random, base64, json, uuid, jsonpickle
+import hashlib, random, base64, json, uuid, jsonpickle, time
 
 from api.base import redis_cache as redisbase
 
+from collections import UserDict
 
 class CacheUserSession():
 
@@ -32,12 +33,18 @@ class CacheUserSession():
         return json.dumps(iam)
 
 
-class CacheBlueprint:
-    import time
+class CacheBlueprint(UserDict):
 
+    guid = str(uuid.uuid4())
     stored = False
     time_created = int(time.time())
-    guid = str(uuid.uuid4())
+
+
+    def __init__(self):
+        self.guid = str(uuid.uuid4())
+        self.stored = False
+        self.time_created = int(time.time())
+
 
     def store(self):
         assert (isinstance(self.to_json(), str))
@@ -45,7 +52,8 @@ class CacheBlueprint:
         self.stored = True
 
     def to_json(self):
-        return jsonpickle.encode(self)
+        json = jsonpickle.encode(self)
+        return json
 
     def load_from_cache(self):
         self.__dict__.update(jsonpickle.decode(redisbase.get(self.guid)).__dict__)
