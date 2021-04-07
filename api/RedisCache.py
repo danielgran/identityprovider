@@ -1,4 +1,4 @@
-import hashlib, random, base64, json, uuid
+import hashlib, random, base64, json, uuid, jsonpickle
 
 from api.base import redis_cache as redisbase
 
@@ -45,5 +45,7 @@ class CacheBlueprint:
         self.stored = True
 
     def to_json(self):
-        pass
+        return jsonpickle.encode(self)
 
+    def load_from_cache(self):
+        self.__dict__.update(jsonpickle.decode(redisbase.get(self.guid)).__dict__)

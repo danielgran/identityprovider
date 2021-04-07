@@ -1,71 +1,72 @@
-import json, uuid, urllib.parse
+import json, uuid, urllib.parse, jsonpickle
 import api.RedisCache as RedisCache
 
 
 class AuthenticationRequest(RedisCache.CacheBlueprint):
-    # request is a flask object
-    def __init__(self, client_id="", state="", nonce="", scope="", redirect_uri="", code_challenge="",
-                 code_challenge_method="", autostore=False, guid=None):
-        self.client_id = client_id
-        self.state = state
-        self.nonce = nonce
+    def __init__(self,
+                 guid=None,
+                 scope="",
+                 response_type="",
+                 client_id="",
+                 redirect_uri="",
+                 state="",
+
+                 response_mode="",
+                 nonce="",
+                 display="",
+                 prompt="",
+                 max_age=0,
+                 ui_locales="",
+                 id_token_hint="",
+                 login_hint="",
+                 acr_values="",
+                 code_challenge="",
+                 code_challenge_method="",
+
+                 auto_store=False
+                 ):
+
+        # Required
+
         self.scope = scope
+        self.response_type = response_type
+        self.client_id = client_id
         self.redirect_uri = redirect_uri
+
+        self.state = state
+        self.response_mode = response_mode
+        self.nonce = nonce
+        self.display = display
+        self.prompt = prompt
+        self.max_age = max_age,
+        self.ui_locales = ui_locales
+        self.id_token_hint = id_token_hint
+        self.login_hint = login_hint
+        self.acr_values = acr_values
         self.code_challenge = code_challenge
         self.code_challenge_method = code_challenge_method
-        self.authenticated = False
+        self.auto_store = auto_store
 
         # conditional checks
         if guid is not None:
             self.guid = guid
 
-        if autostore:
+        if auto_store:
             self.store()
 
-        self.login_uri = urllib.parse.urlparse(
-            self.redirect_uri + "/?guid=" + self.guid + "&dest=http://localhost:5000/authorize").geturl()
+    @property
+    def redirect_uri_with_params(self):
+        try:
+            return urllib.parse.urlparse(self.redirect_uri + "/?guid=" + self.guid + "&dest=http://localhost:5000/authorize").geturl()
+        except:
+            return ""
 
     def is_valid(self):
-
-        if (
-                self.client_id and
-                self.state and
-                self.nonce and
-                self.scope and
-                self.redirect_uri and
-                self.code_challenge and
-                self.code_challenge_method):
+        # Check for mandatory parameters
+        if self.guid and self.scope and self.response_type and self.redirect_uri:
             return True
 
         return False
-
-    def to_json(self):
-        iam = {
-            "guid": self.guid,
-            "client_id": self.client_id,
-            "state": self.state,
-            "nonce": self.nonce,
-            "scope": self.scope,
-            "redirect_uri": self.redirect_uri,
-            "code_challenge": self.code_challenge,
-            "code_challenge_method": self.code_challenge_method,
-            "authenticated": self.authenticated
-        }
-
-        return json.dumps(iam)
-
-    def load_from_cache(self):
-        jsonstr = RedisCache.redisbase.get(self.guid)
-        obj = json.loads(jsonstr)
-
-        self.client_id = obj['client_id']
-        self.state = obj['state']
-        self.nonce = obj['nonce']
-        self.scope = obj['scope']
-        self.redirect_uri = obj['redirect_uri']
-        self.code_challenge = obj['code_challenge']
-        self.code_challenge_method = obj['code_challenge_method']
-        self.authenticated = obj['authenticated']
 
 
 def handle_request(request):
