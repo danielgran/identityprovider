@@ -26,6 +26,9 @@ def handle_authentication_request(request):
     code_challenge = request.args.get("code_challenge")
     code_challenge_method = request.args.get("code_challenge_method")
 
+    # Security Checks
+
+
     authentication_request = AuthenticationRequest(
                                                     scope=scope,
                                                     response_type=response_type,
@@ -59,17 +62,19 @@ def handle_user_authentication(request):
     email = request.form.get("email")
     password = request.form.get("password")
 
-    user_id = ""
-
 
     if not guid or not email or not password:
-        return ErrorResponse("False arguments")
+        return ErrorResponse("Insufficient Arguments")
 
     authobj = AuthenticationRequest(guid=guid)
-    authobj.load_from_cache()
+    try:
+        authobj.load_from_cache()
+    except:
+        return ErrorResponse("Error fetching Authentication Request\n" +
+                             "id: " + guid)
 
     userobj = User.query.filter_by(email=email).first()
-
+    user_id = userobj.id
 
     # password and email login
 
@@ -77,7 +82,6 @@ def handle_user_authentication(request):
     if ph.verify(userobj.password, password):
         authobj.authenticated = True
         authobj.store()
-        user_id = email
         # authentication response can be created
 
     #todo other providers like facebook or google
@@ -87,9 +91,10 @@ def handle_user_authentication(request):
     # If the client has successfully authenticated
 
     if authobj.authenticated:
-        auth_resp = AuthenticationResponse(authentication_request_id=authobj.guid, redirect_uri=authobj.get_, state=authobj.state)
-        auth_resp.release_token()
-        auth_resp.user_id = user_id
+        authobj.destory()
+        auth_resp = AuthenticationResponse(redirect_uri=authobj.redirect_uri_with_params,
+                                           state=authobj.state,
+                                           user_id=user_id)
         return auth_resp
 
 

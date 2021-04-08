@@ -1,10 +1,14 @@
-import json, uuid, urllib.parse, jsonpickle
+import urllib.parse
+
 import api.RedisCache as RedisCache
+from api.model.Application import Application
 
 
 class AuthenticationRequest(RedisCache.CacheBlueprint):
     def __init__(self,
                  guid=None,
+                 auto_store=False,
+
                  scope="",
                  response_type="",
                  client_id="",
@@ -21,9 +25,7 @@ class AuthenticationRequest(RedisCache.CacheBlueprint):
                  login_hint="",
                  acr_values="",
                  code_challenge="",
-                 code_challenge_method="",
-
-                 auto_store=False
+                 code_challenge_method=""
                  ):
 
         super(AuthenticationRequest, self).__init__()
@@ -58,16 +60,41 @@ class AuthenticationRequest(RedisCache.CacheBlueprint):
     @property
     def redirect_uri_with_params(self):
         try:
-            return urllib.parse.urlparse(self.redirect_uri + "/?guid=" + self.guid + "&dest=http://localhost:5000/authorize").geturl()
+            return urllib.parse.urlparse("http://localhost:5000/authorize" + "/?guid=" + self.guid + "&dest=" + self.redirect_uri).geturl()
         except:
             return ""
 
     def is_valid(self):
         # Check for mandatory parameters
-        if self.guid and self.scope and self.response_type and self.redirect_uri:
-            return True
+        if not (self.guid and self.scope and self.response_type and self.redirect_uri and self.client_id):
+            return False
 
-        return False
+
+        # Check if a proper client makes the request
+        db_obj = Application.query.filter_by(client_id=self.client_id).first()
+        if db_obj is None or not db_obj.uris:
+            return False
+
+        # Check if the supplied redirect_uri matches with one in the database
+        for i in range(len(db_obj.uris)):
+            if self.redirect_uri == db_obj.uris[i].redirect_uri:
+                break
+            if i+1 >= len(db_obj.uris):
+                return False
+
+        # Check if scope is present
+        if not "openid" in self.scope:
+            return False
+
+        if self.response_type != "code":
+            return False
+
+        # Check for code challenge
+        if self.code_challenge_method != "S256":
+            return False
+
+        return True
+
 
 
 def handle_request(request):

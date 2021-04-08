@@ -4,6 +4,7 @@ from api.base import redis_cache as redisbase
 
 from collections import UserDict
 
+
 class CacheUserSession():
 
     def __init__(self, address, authorization_level):
@@ -51,9 +52,17 @@ class CacheBlueprint(UserDict):
         redisbase.set(self.guid, self.to_json(), ex=1200)  # ex=600 delete cache object after 10 minutes
         self.stored = True
 
+    def destory(self):
+        redisbase.delete(self.guid)
+
+
     def to_json(self):
         json = jsonpickle.encode(self)
         return json
+
+    @property
+    def propjson(self):
+        return self.to_json()
 
     def load_from_cache(self):
         self.__dict__.update(jsonpickle.decode(redisbase.get(self.guid)).__dict__)

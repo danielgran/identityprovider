@@ -1,5 +1,4 @@
-from sqlalchemy.orm import relationship
-from sqlalchemy import Table, Column, Integer, String, Date, TIMESTAMP, CHAR
+from sqlalchemy import Column, Integer, String, Date, TIMESTAMP, CHAR
 from api.base import db
 
 

@@ -1,14 +1,17 @@
-import redis
+import redis, api.base as apibase
 
 from ariadne.constants import PLAYGROUND_HTML
 from ariadne import load_schema_from_path, make_executable_schema, graphql_sync, snake_case_fallback_resolvers, ObjectType
 from flask import Flask, request, jsonify, Response
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from api.base import db
 import api.openidconnect.authentication.AuthenticationHandler as oidcAuthorize
 import api.openidconnect.token.HandleTokenRequest as oidcToken
 from api.openidconnect.ErrorResponse import ErrorResponse
 from api.registration.registration import register_user
+
 
 ENABLE_PLAYGROUND = True
 
@@ -69,7 +72,6 @@ def api_authorize_get():
 
     if isinstance(obj, ErrorResponse):
         # Bad request
-        # TODO Content type is still text/html
         return Response(response=str(obj), content_type="application/json", status=400)
 
     resp = Response()
@@ -82,9 +84,13 @@ def api_authorize_get():
 def api_authorize_post():
     print(request)
     obj = oidcAuthorize.handle_user_authentication(request)
-    # todo error handling
+
+    if isinstance(obj, ErrorResponse):
+        # Bad request
+        return Response(response=str(obj), content_type="application/json", status=400)
+
     resp = Response()
-    resp.headers["Location"] = obj.get_full_redirect_uri()
+    resp.headers["Location"] = obj.redirect_uri_with_params
     return resp, 301
 
 
