@@ -101,7 +101,6 @@ def api_token_request():
     obj = oidcToken.handle_token_request(request)
     if isinstance(obj, ErrorResponse):
         # Bad request
-        # TODO Content type is still text/html
         return Response(response=str(obj), content_type="application/json", status=400)
 
     resp = Response()
