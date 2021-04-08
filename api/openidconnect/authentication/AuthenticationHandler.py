@@ -28,40 +28,36 @@ def handle_authentication_request(request):
 
     # Security Checks
 
-
     authentication_request = AuthenticationRequest(
-                                                    scope=scope,
-                                                    response_type=response_type,
-                                                    client_id=client_id,
-                                                    redirect_uri=redirect_uri,
-                                                    state=state,
-                                                    response_mode=response_mode,
-                                                    nonce=nonce,
-                                                    display=display,
-                                                    prompt=prompt,
-                                                    max_age=max_age,
-                                                    ui_locales=ui_locales,
-                                                    id_token_hint=id_token_hint,
-                                                    login_hint=login_hint,
-                                                    acr_values=acr_values,
-                                                    code_challenge=code_challenge,
-                                                    code_challenge_method=code_challenge_method,
-                                                    auto_store=True)
+        scope=scope,
+        response_type=response_type,
+        client_id=client_id,
+        redirect_uri=redirect_uri,
+        state=state,
+        response_mode=response_mode,
+        nonce=nonce,
+        display=display,
+        prompt=prompt,
+        max_age=max_age,
+        ui_locales=ui_locales,
+        id_token_hint=id_token_hint,
+        login_hint=login_hint,
+        acr_values=acr_values,
+        code_challenge=code_challenge,
+        code_challenge_method=code_challenge_method,
+        auto_store=True)
 
     # Check integrity of the request
     if not authentication_request.is_valid():
         return ErrorResponse("Error in supplied arguments")
 
-
     return authentication_request
 
 
 def handle_user_authentication(request):
-
     guid = request.form.get("guid")
     email = request.form.get("email")
     password = request.form.get("password")
-
 
     if not guid or not email or not password:
         return ErrorResponse("Insufficient Arguments")
@@ -78,15 +74,16 @@ def handle_user_authentication(request):
 
     # password and email login
 
-    ph = PasswordHasher()
-    if ph.verify(userobj.password, password):
-        authobj.authenticated = True
-        authobj.store()
-        # authentication response can be created
+    try:
+        ph = PasswordHasher()
+        if ph.verify(userobj.password, password):
+            authobj.authenticated = True
+            authobj.store()
+            # authentication response can be created
+    except:
+        return ErrorResponse("Invalid credentials")
 
-    #todo other providers like facebook or google
-
-
+    # todo other providers like facebook or google
 
     # If the client has successfully authenticated
 
@@ -96,7 +93,3 @@ def handle_user_authentication(request):
                                            state=authobj.state,
                                            user_id=user_id)
         return auth_resp
-
-
-
-
