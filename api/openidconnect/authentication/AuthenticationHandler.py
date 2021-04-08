@@ -92,7 +92,7 @@ def handle_user_authentication(request):
 
     if authobj.authenticated:
         authobj.destory()
-        auth_resp = AuthenticationResponse(redirect_uri=authobj.redirect_uri_with_params,
+        auth_resp = AuthenticationResponse(redirect_uri=authobj.redirect_uri,
                                            state=authobj.state,
                                            user_id=user_id)
         return auth_resp

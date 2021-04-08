@@ -58,9 +58,9 @@ class AuthenticationRequest(RedisCache.CacheBlueprint):
             self.store()
 
     @property
-    def redirect_uri_with_params(self):
+    def authentication_uri_with_params(self):
         try:
-            return urllib.parse.urlparse("http://localhost:5000/authorize" + "/?guid=" + self.guid + "&dest=" + self.redirect_uri).geturl()
+            return urllib.parse.urlparse("http://localhost:8080/login" + "/?guid=" + self.guid + "&dest=http://localhost:5000/authorize").geturl()
         except:
             return ""
 

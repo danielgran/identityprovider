@@ -75,7 +75,7 @@ def api_authorize_get():
         return Response(response=str(obj), content_type="application/json", status=400)
 
     resp = Response()
-    resp.headers["Location"] = obj.redirect_uri_with_params
+    resp.headers["Location"] = obj.authentication_uri_with_params
     return resp, 301
 
 
