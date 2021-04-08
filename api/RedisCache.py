@@ -43,14 +43,12 @@ class CacheBlueprint(UserDict):
 
     def __init__(self):
         self.guid = str(uuid.uuid4())
-        self.stored = False
         self.time_created = int(time.time())
 
 
     def store(self):
         assert (isinstance(self.to_json(), str))
         redisbase.set(self.guid, self.to_json(), ex=1200)  # ex=600 delete cache object after 10 minutes
-        self.stored = True
 
     def destory(self):
         redisbase.delete(self.guid)
