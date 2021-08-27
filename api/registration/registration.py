@@ -5,7 +5,7 @@ import sqlalchemy
 
 def register_user(obj, info, email):
 
-    print(str(info.context.remote_addr) + "HURE")
+    print(str(info.context.remote_addr))
     try:
         result = base.db.session.execute(sqlalchemy.text("call sp_addNewUser(:email)"), [{"email": data.request.email}])
         base.db.session.commit()
